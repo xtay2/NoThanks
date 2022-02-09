@@ -19,13 +19,18 @@ public abstract class GameManager {
 
 	private static List<Player> players;
 
-	private static final List<Integer> CARDS = generateCards(35);
+	private static List<Integer> CARDS;
 
 	/**
-	 * Executes the whole game and announces the winner.
+	 * Executes the whole game and returns the winner.
 	 */
-	public static void play(List<Player> playerList) {
+	public static Player play(List<Player> playerList) {
+		if (playerList.size() < 2)
+			throw new IllegalArgumentException("There have to be atleast two players.");
+		// INIT
 		players = playerList;
+		CARDS = generateCards(35);
+		// GAME
 		GameState g = new GameState(CARDS.remove(0));
 		while (!CARDS.isEmpty()) {
 			// For every player
@@ -60,19 +65,20 @@ public abstract class GameManager {
 			}
 
 		}
-		countScores();
+		return countScores();
 	}
 
 	/** Count all scores and display the Results. */
-	private static void countScores() {
+	private static Player countScores() {
 		Map<Player, Integer> scores = new HashMap<>();
 		for (Player p : players)
 			scores.put(p, p.count());
 
-		Map<Player, Integer> sortedMap = scores.entrySet().stream().sorted(Entry.comparingByValue(Comparator.reverseOrder()))
+		LinkedHashMap<Player, Integer> sortedMap = scores.entrySet().stream().sorted(Entry.comparingByValue())
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		System.out.println("\nScores " + "-".repeat(50));
 		sortedMap.forEach((k, v) -> System.out.println(k + ": " + v));
+		return sortedMap.keySet().iterator().next();
 	}
 
 	/** Return a List of all PlayerNames */
