@@ -11,25 +11,25 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import player.Player;
-import player.instances.Bot;
 
 public abstract class GameManager {
 
 	/** The amount of coins every player gets at the start of the game. */
 	public static final int START_COINS = 11;
 
-	private static final List<Player> PLAYERS = List.of(new Bot(), new Bot());
+	private static List<Player> players;
 
 	private static final List<Integer> CARDS = generateCards(35);
 
 	/**
 	 * Executes the whole game and announces the winner.
 	 */
-	private static void play() {
+	public static void play(List<Player> playerList) {
+		players = playerList;
 		GameState g = new GameState(CARDS.remove(0));
 		while (!CARDS.isEmpty()) {
 			// For every player
-			for (Player p : PLAYERS) {
+			for (Player p : players) {
 				// If they got coins they can take a card
 				if (p.getCoins() > 1) {
 					// If they take a card it, and the coins get added.
@@ -66,7 +66,7 @@ public abstract class GameManager {
 	/** Count all scores and display the Results. */
 	private static void countScores() {
 		Map<Player, Integer> scores = new HashMap<>();
-		for (Player p : PLAYERS)
+		for (Player p : players)
 			scores.put(p, p.count());
 
 		Map<Player, Integer> sortedMap = scores.entrySet().stream().sorted(Entry.comparingByValue(Comparator.reverseOrder()))
@@ -78,7 +78,7 @@ public abstract class GameManager {
 	/** Return a List of all PlayerNames */
 	public static List<String> getPlayerNames() {
 		List<String> names = new ArrayList<>();
-		for (Player p : PLAYERS)
+		for (Player p : players)
 			names.add(p.name);
 		return names;
 	}
@@ -95,13 +95,13 @@ public abstract class GameManager {
 
 	/** Pass this and youll receive the next players name. */
 	public static String getNextPlayer(Player you) {
-		int next = PLAYERS.indexOf(you) + 1;
-		return PLAYERS.get(next == PLAYERS.size() ? 0 : next).name;
+		int next = players.indexOf(you) + 1;
+		return players.get(next == players.size() ? 0 : next).name;
 	}
 
 	/** Identifies a {@link Player} by name. */
 	private static Player getPlayerByName(String player) {
-		return PLAYERS.stream().filter(p -> p.name.equals(player)).findFirst().get();
+		return players.stream().filter(p -> p.name.equals(player)).findFirst().get();
 	}
 
 	/**
@@ -116,9 +116,5 @@ public abstract class GameManager {
 			c.add(i);
 		Collections.shuffle(c);
 		return c;
-	}
-
-	public static void main(String[] args) {
-		play();
 	}
 }
