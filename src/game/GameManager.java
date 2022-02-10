@@ -2,7 +2,6 @@ package game;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,6 +10,9 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import player.Player;
+import player.instances.LasseBot;
+import player.instances.Person;
+import player.instances.SimpleBot;
 
 public abstract class GameManager {
 
@@ -28,7 +30,8 @@ public abstract class GameManager {
 		if (playerList.size() < 2)
 			throw new IllegalArgumentException("There have to be atleast two players.");
 		// INIT
-		players = playerList;
+		players = new ArrayList<>(playerList);
+		Collections.shuffle(players);
 		CARDS = generateCards(35);
 		// GAME
 		GameState g = new GameState(CARDS.remove(0));
@@ -40,32 +43,33 @@ public abstract class GameManager {
 					// If they take a card it, and the coins get added.
 					if (p.takeCard(g)) {
 						System.out.println(p + " takes " + g);
-						p.give(g);
-						if (!CARDS.isEmpty())
-							g = new GameState(CARDS.remove(0));
-						else
+						if ((g = give(g, p)) == null)
 							break;
 					}
 					// If they dont take the card, it gets passed on.
 					else {
 						System.out.println(p + " passes " + g);
-						g.increase();
 						p.decrease();
+						g.increase();
 					}
 				}
 				// If they had no coins, they have to take the card.
 				else {
 					System.out.println(p + " has to take " + g);
-					p.give(g);
-					if (!CARDS.isEmpty())
-						g = new GameState(CARDS.remove(0));
-					else
+					if ((g = give(g, p)) == null)
 						break;
 				}
 			}
 
 		}
 		return countScores();
+	}
+
+	private static GameState give(GameState g, Player p) {
+		p.give(g);
+		if (!CARDS.isEmpty())
+			return new GameState(CARDS.remove(0));
+		return null;
 	}
 
 	/** Count all scores and display the Results. */
@@ -77,7 +81,7 @@ public abstract class GameManager {
 		LinkedHashMap<Player, Integer> sortedMap = scores.entrySet().stream().sorted(Entry.comparingByValue())
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		System.out.println("\nScores " + "-".repeat(50));
-		sortedMap.forEach((k, v) -> System.out.println(k + ": " + v));
+		sortedMap.forEach((k, v) -> System.out.println(k + ": \t" + v + " \t" + k.getCoins() + " \t" + k.getCards()));
 		return sortedMap.keySet().iterator().next();
 	}
 
@@ -122,5 +126,14 @@ public abstract class GameManager {
 			c.add(i);
 		Collections.shuffle(c);
 		return c;
+	}
+
+	public static void main(String[] args) {
+		play(List.of(
+				new LasseBot(1), 
+				new Person("Lasse"),
+				new SimpleBot("DennisBot", 0, 8.88375798924735, 6.397323652505392, 3.837189373582033, 5.482606473935411),
+				new Person("Dennis"), 
+				new Person("Leo")));
 	}
 }
